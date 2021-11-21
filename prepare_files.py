@@ -90,9 +90,9 @@ def unzip():
 def download_multiple():
     file_name = 'insee.txt'
     with open (file_name,'r') as f:
-        insee_list = f.read().split(' ')
+        insee_list = f.read().split('\n')
     for insee in insee_list:
-        download_cadastre(insee)
+        download_cadastre(insee.strip())
 
 def main():
     if sys.argv[1] == 'insee':
