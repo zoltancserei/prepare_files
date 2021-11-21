@@ -6,14 +6,14 @@ import shutil
 import gzip
 from selenium import webdriver
 
+# Set the path for chromedriver
+PATH = '\chromedriver.exe'
+
 # Set up the download directory to be the current working directory in Chrome
 chrome_options = webdriver.ChromeOptions()
 directory = os.getcwd()
 prefs = {'download.default_directory' : directory}
 chrome_options.add_experimental_option('prefs', prefs)
-
-# Set the path for chromedriver
-PATH = 'C:\Program Files (x86)\chromedriver.exe'
 
 
 def download_cadastre(number):
