@@ -73,7 +73,7 @@ def unzip():
             os.remove(filename)
 
     # Create the folders
-    new_folders = ['Batiments', 'Communes', 'Parcelles']
+    new_folders = ['Batiments', 'Communes', 'Parcelles', 'Deliverable']
     for folder in new_folders:
         new_folder = fr"{directory}\{folder}"
         os.makedirs(new_folder, exist_ok=True)
