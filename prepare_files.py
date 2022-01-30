@@ -4,10 +4,11 @@ import sys
 import time
 import shutil
 import gzip
+import requests
 from selenium import webdriver
 
 # Set the path for chromedriver
-PATH = '\chromedriver.exe'
+PATH = r'C:\Program Files (x86)\chromedriver.exe'
 
 # Set up the download directory to be the current working directory in Chrome
 chrome_options = webdriver.ChromeOptions()
@@ -15,43 +16,60 @@ directory = os.getcwd()
 prefs = {'download.default_directory' : directory}
 chrome_options.add_experimental_option('prefs', prefs)
 
+# Define the parameters we are interested in downloading
+params = ['batiments', 'parcelles', 'communes']
+
+# Create a variable to store the insee of the communes we couldn't downlaod
+not_found = []
 
 def download_cadastre(number):
     # Set up selenium
     driver = webdriver.Chrome(PATH, options=chrome_options)
-    # Check if the input has correct format
-    if len(number) != 5:
-        print('The number must have 5 digits!')
-        sys.exit()
 
     # Check the cadastre number
-    if number[:2] == '97':
+    if number[:2] == '97': 
+        # In this case the prefix is made of 3 digits
         prefix = number[:3]
-        download_special(number, prefix, driver)
+        download_special(number, prefix, driver, params, not_found)
+
     else:
         prefix = number[:2]
-        download_regular(number, prefix, driver)
+        # In this case the prefix is made of 2 digits
+        download_regular(number, prefix, driver, params, not_found)
 
 
-def download_regular(number, prefix, driver):
-    # Download the wanted files
-    driver.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
-    params = ['batiments', 'parcelles', 'communes']
-    for param in params:
-        element = driver.find_element_by_xpath(f"//a[text()[contains(.,'{param}')]]")
-        element.click()
+def download_regular(number, prefix, driver, params, not_found):
+    # Check if the page exists
+    r = requests.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
+
+    # If the page exists download the wanted files
+    if r:
+        driver.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
+        
+        for param in params:
+            element = driver.find_element_by_xpath(f"//a[text()[contains(.,'{param}')]]")
+            element.click()
+    else:
+        not_found.append(number)
+        print(f' --- Download unsuccessful for cadastre {number}, because of the following error code: {r.status_code}. ---')
 
     time.sleep(1)
     driver.close()
 
 
-def download_special(number, prefix, driver):
+def download_special(number, prefix, driver, params, not_found):
+    # Check if the page exists    
+    r = requests.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
+
     # Download the wanted files if the insee starts with 97
-    driver.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
-    params = ['batiments', 'parcelles', 'communes']
-    for param in params:
-        element = driver.find_element_by_xpath(f"//a[text()[contains(.,'{param}')]]")
-        element.click()
+    if r:
+        driver.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
+        for param in params:
+            element = driver.find_element_by_xpath(f"//a[text()[contains(.,'{param}')]]")
+            element.click()
+    else:
+        not_found.append(number)
+        print(f' --- Download unsuccessful for cadastre {number}, because of the following error code: {r.status_code}. ---')
 
     time.sleep(1)
     driver.close()
@@ -81,11 +99,13 @@ def unzip():
     # Move the files to their folders
     files = [file for file in os.listdir(directory) if file.endswith('.json')]
     for file in files:
-        cadastre = file.split('-')[-1]
-        file_name = fr"{directory}\{file}"
-        folder_name = fr"{directory}\{cadastre.split('.')[0].title()}"
-        shutil.move(os.path.join(directory, file), folder_name)
-
+        cadastre = file.split('-')[-1] # Extract the cadastre type (ex.: batiments.json) from the name
+        file_name = os.path.join(directory, file)
+        folder_name = os.path.join(directory, cadastre.split('.')[0].title()) # Generate the folder name (ex.: Batiments)
+        new_file = os.path.join(folder_name, file)
+        if os.path.exists(new_file): # If the file already exists, overwrite it
+            os.remove(new_file)
+        shutil.move(file_name, folder_name)
 
 def download_multiple():
     file_name = 'insee.txt'
@@ -95,6 +115,8 @@ def download_multiple():
         download_cadastre(insee.strip())
 
 def main():
+    assert len(sys.argv[1]) == 5 or sys.argv[1] == "insee", " --- The input must be a number of 5 digits or 'insee' if you are trying to download multiple municipalities (communes)! ---"
+
     if sys.argv[1] == 'insee':
         # Get the insee numbers from a text file
         download_multiple()
@@ -105,6 +127,10 @@ def main():
         download_cadastre(number)
         unzip()
 
+    if not_found:
+        print(f" --- Could not download the commune(s) for the following insee: {(', '.join(not_found))}. ---")
+    else:
+        print(" --- Successfully downloaded the requested files. ---")
 
 if __name__ == "__main__":
     main()
