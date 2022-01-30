@@ -103,7 +103,9 @@ def unzip():
         shutil.move(file_name, folder_name)
 
 def download_multiple():
-    file_name = 'insee.txt'
+    for item in os.listdir(directory):
+        if item.endswith('.txt'):
+            file_name = item
     with open (file_name,'r') as f:
         insee_list = f.read().split('\n')
     for insee in insee_list:
