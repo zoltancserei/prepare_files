@@ -31,7 +31,6 @@ def download_cadastre(number):
         # In this case the prefix is made of 3 digits
         prefix = number[:3]
         download_special(number, prefix, driver, params, not_found)
-
     else:
         prefix = number[:2]
         # In this case the prefix is made of 2 digits
@@ -41,7 +40,6 @@ def download_cadastre(number):
 def download_regular(number, prefix, driver, params, not_found):
     # Check if the page exists
     r = requests.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
-
     # If the page exists download the wanted files
     if r:
         driver.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
@@ -52,15 +50,13 @@ def download_regular(number, prefix, driver, params, not_found):
     else:
         not_found.append(number)
         print(f' --- Download unsuccessful for cadastre {number}, because of the following error code: {r.status_code}. ---')
-
-    time.sleep(1)
+    time.sleep(1) # Waiting for the downloads to complete.
     driver.close()
 
 
 def download_special(number, prefix, driver, params, not_found):
     # Check if the page exists    
     r = requests.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
-
     # Download the wanted files if the insee starts with 97
     if r:
         driver.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
@@ -70,8 +66,7 @@ def download_special(number, prefix, driver, params, not_found):
     else:
         not_found.append(number)
         print(f' --- Download unsuccessful for cadastre {number}, because of the following error code: {r.status_code}. ---')
-
-    time.sleep(1)
+    time.sleep(1) # Waiting for the downloads to complete.
     driver.close()
 
 
@@ -80,7 +75,7 @@ def unzip():
     #Define the current working directory and the file extension
     directory = os.getcwd()
     extension = '.gz'
-
+    
     # Loop through the items in the directory, check for '.gz' extension and extract them
     for item in os.listdir(directory):
         if item.endswith(extension): 
