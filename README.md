@@ -13,4 +13,4 @@ To run the script, simply run the command prompt from the directory where the .p
 
 For a single commune type in command prompt: python prepare_files.py 00000
 
-For multiple communes type in command prompt: python prepare_files.py insee. 
+For multiple communes type in command prompt: python prepare_files.py insee
