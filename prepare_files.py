@@ -6,9 +6,11 @@ import shutil
 import gzip
 import requests
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
+
 
 # Set the path for chromedriver
-PATH = r'C:\Program Files (x86)\chromedriver.exe'
+PATH = r'D:\zoltancs\python_stuff\chromedriver.exe'
 
 # Set up the download directory to be the current working directory in Chrome
 chrome_options = webdriver.ChromeOptions()
@@ -45,8 +47,11 @@ def download_regular(number, prefix, driver, params, not_found):
         driver.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
         
         for param in params:
-            element = driver.find_element_by_xpath(f"//a[text()[contains(.,'{param}')]]")
-            element.click()
+            try:
+                element = driver.find_element_by_xpath(f"//a[text()[contains(.,'{param}')]]")
+                element.click()
+            except NoSuchElementException:
+                pass
     else:
         not_found.append(number)
         print(f' --- Download unsuccessful for cadastre {number}, because of the following error code: {r.status_code}. ---')
@@ -60,9 +65,13 @@ def download_special(number, prefix, driver, params, not_found):
     # Download the wanted files if the insee starts with 97
     if r:
         driver.get(f'https://cadastre.data.gouv.fr/data/etalab-cadastre/latest/geojson/communes/{prefix}/{number}/')
+
         for param in params:
-            element = driver.find_element_by_xpath(f"//a[text()[contains(.,'{param}')]]")
-            element.click()
+            try:
+                element = driver.find_element_by_xpath(f"//a[text()[contains(.,'{param}')]]")
+                element.click()
+            except NoSuchElementException:
+                pass     
     else:
         not_found.append(number)
         print(f' --- Download unsuccessful for cadastre {number}, because of the following error code: {r.status_code}. ---')
